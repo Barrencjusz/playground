@@ -32,7 +32,7 @@ class KotlinSpringBootApplication {
     @Component
     @ConfigurationProperties("example")
     data class ExampleProperties(
-            var a: String,
+        var a: String,
         var b: String
     )
 }

@@ -16,19 +16,23 @@
 
     <int-http:inbound-gateway request-channel="httpInputChannel" path="/"/>
 
-    <int:service-activator ref="functionGateway" input-channel="httpInputChannel" output-channel="loggingChannel"/>
+    <int:service-activator id="gatewayWrapperActivator" input-channel="httpInputChannel" ref="functionWrappingGateway"/>
+    <int:gateway id="functionWrappingGateway" default-request-channel="wrappedGatewayChannel" error-channel="errorFunctionChannel"/>
 
+    <int:service-activator id="gatewayActivator" ref="functionGateway" requires-reply="true" input-channel="wrappedGatewayChannel"/>
     <int:gateway
             id="functionGateway"
             default-reply-timeout="1000"
             default-request-channel="functionChannel"
     />
 
+
+
     <int:channel id="functionChannel">
         <int:dispatcher task-executor="taskExecutor"/>
     </int:channel>
 
-    <int:channel id="loggingChannel"/>
+    <int:channel id="errorFunctionChannel"/>
 
     <task:executor id="taskExecutor"/>
 </beans>

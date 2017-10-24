@@ -8,8 +8,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.integration.annotation.Transformer;
-import org.springframework.messaging.Message;
+import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Component;
 
 @SpringBootApplication
@@ -26,14 +28,17 @@ public class SpringIntegrationGatewayErrorApplication {
 
 		@Transformer(inputChannel = "functionChannel")
 		public String transform(@Payload("myParam[0]") String myParam) throws InterruptedException {
-			TimeUnit.MILLISECONDS.sleep(ThreadLocalRandom.current().nextInt(5000));
+			if(ThreadLocalRandom.current().nextBoolean()) {
+				throw new RuntimeException("surprise!");
+			}
+			TimeUnit.MILLISECONDS.sleep(ThreadLocalRandom.current().nextInt(4000));
 			return myParam + myParam + myParam;
 		}
 
-		@Transformer(inputChannel = "loggingChannel")
-		public Message transform(Message message) {
-			log.info(message.toString());
-			return message;
+		@MessageExceptionHandler
+		@Transformer(inputChannel = "errorFunctionChannel")
+		public String transform(GenericMessage<MessagingException> message) {
+			return "olaboga! " + message.getPayload().getLocalizedMessage()+ " " + message.getPayload().getFailedMessage().getPayload().toString();
 		}
 	}
 }
